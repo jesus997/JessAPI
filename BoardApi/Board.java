@@ -10,7 +10,7 @@ import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 
 /**
- * BoardApi v2.0
+ * BoardApi v2.1
  * @author JessHilario
  *
  */
@@ -21,6 +21,7 @@ public class Board {
 	private Objective objective;
 	private Scoreboard board;
 	private int color = 0;
+	private List<String> entries = new ArrayList<>();
 	
 	public Board(String name){
 		setName(name);
@@ -63,8 +64,8 @@ public class Board {
 	public void setTitle(String title){
 		getObjective().setDisplayName(title.replace("&", "§"));
 	}
-	public void getTitle(){
-		getObjective().getDisplayName();
+	public String getTitle(){
+		return getObjective().getDisplayName();
 	}
 	
 	public Score getScore(String score){
@@ -73,12 +74,31 @@ public class Board {
 	
 	public void addLine(String line, int i){
 		line = line.replace("&", "§");
-		if(line.length() > 16)
-			line = line.substring(0, 16);
-		if(getObjective().getScore(line) != null){
-			removeLine(line);
+		if(color > 9) color = 0;
+		line = line + "§" +  color;
+		if(line.length() > 16){
+			if(line.length() <= 32)
+				addTeam(line.substring(0, 16), line.substring(16, line.length()), null, i);
+			if(line.length() >  32 && line.length() <= 48)
+				addTeam(line.substring(0, 16), line.substring(16, 32), line.substring(33, line.length()), i);
+			color++;
+		}else {
+			if(getObjective().getScore(line) != null){
+				removeLine(line);
+			}
+			Score s = getObjective().getScore(line);
+			s.setScore(i);
+			entries.add(line);
 		}
-		Score s = getObjective().getScore(line);
+	}
+	
+	public void addTeam(String prefix, String name, String sufix, int i){
+		org.bukkit.scoreboard.Team t = board.registerNewTeam(name);
+		t.setPrefix(prefix);
+		if(sufix != null)
+			t.setSuffix(sufix);
+		t.addEntry(name);
+		Score s = getObjective().getScore(name);
 		s.setScore(i);
 	}
 	
@@ -99,24 +119,33 @@ public class Board {
 	
 	public void updateLine(String oldLine, String newLine, int i){
 		oldLine = oldLine.replace("&", "§");
+		if(oldLine.length() > 16){
+			if(oldLine.length() <= 32)
+				board.getTeam(oldLine.substring(16, oldLine.length())).unregister();; 
+			if(oldLine.length() >  32 && oldLine.length() <= 48)
+				board.getTeam(oldLine.substring(16, 32)).unregister();;
+		}
 		if(getObjective().getScore(oldLine).getScore() == i){
 			removeLine(oldLine);
 		}
 		addLine(newLine, i);
 	}
 	
-	public void update(Arena a){
-		String criteria = getObjective().getCriteria();
-		DisplaySlot slot = getObjective().getDisplaySlot();
-		try{
-			getObjective().unregister();
-			setObjective(getBoard().registerNewObjective(getName(), criteria));
-			getObjective().setDisplaySlot(slot);
-			for(Player p : Bukkit.getOnlinePlayers()){
-				p.getPlayer().setScoreboard(getBoard());
-			}
-		}catch(Exception ex){
-			ex.printStackTrace();
+	public List<String> getEntries() {
+		return entries;
+	}
+
+	public void setEntries(List<String> entries) {
+		this.entries = entries;
+	}
+	
+	public void update(){
+		for(org.bukkit.scoreboard.Team t : getObjective().getScoreboard().getTeams()){
+			t.unregister();
+		}
+		
+		for(String s : board.getEntries()){
+			board.resetScores(s);
 		}
 	}
 }
