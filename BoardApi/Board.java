@@ -16,18 +16,21 @@ public class Board {
 	private Scoreboard board;
 	private int color = 0;
 	private List<String> entries = new ArrayList<>();
+	private static Plugin plugin;
 	
-	public Board(String name){
+	public Board(String name, Plugin p){
 		setName(name);
+		plugin = p;
 		setBoard(Bukkit.getScoreboardManager().getNewScoreboard());
 		listOfBoard.add(this);
 	}
 	
-	public Board(String name, String criteria, DisplaySlot slot){
+	public Board(String name, String criteria, DisplaySlot slot, Plugin p){
 		setName(name);
 		setBoard(Bukkit.getScoreboardManager().getNewScoreboard());
 		setObjective(getBoard().registerNewObjective(name, criteria));
 		getObjective().setDisplaySlot(slot);
+		plugin = p;
 		listOfBoard.add(this);
 	}
 
@@ -141,5 +144,21 @@ public class Board {
 		for(String s : board.getEntries()){
 			board.resetScores(s);
 		}
+	}
+	
+	public static void startCaroucel(final List<Board> boards, final int time, final Collection<? extends Player> p){
+		new BukkitRunnable(){
+			int i = 0;
+			public void run(){
+				if(i > (boards.size() - 1)){
+					i = 0;
+				}
+				
+				for(Player p2 : p){
+					p2.setScoreboard(boards.get(i).getBoard()); 
+				}
+				i++;
+			}
+		}.runTaskTimer(plugin, 0, time*20);
 	}
 }
