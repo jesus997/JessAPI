@@ -1,4 +1,4 @@
-package me.JessHilario.BoardApi;
+package me.JessHilario.Util.Scoreboard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,12 +8,6 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
-
-/**
- * BoardApi v2.1
- * @author JessHilario
- *
- */
 
 public class Board {
 	public static List<Board> listOfBoard = new ArrayList<>();
